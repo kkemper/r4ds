@@ -130,9 +130,9 @@ ggplot(data = mpg) +
   geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y = hwy)) + 
   coord_flip()
 
-## 7.5.1.1 - Exercises
+### 7.5.1.1 - Exercises
 
-### 1
+#### 1
 
 flights %>%
   mutate(
@@ -144,23 +144,23 @@ flights %>%
   ggplot(mapping = aes(x = canceled, y = sched_dep_time, color = canceled)) +
   geom_boxplot()
 
-### 2
+#### 2
 
 ppc <- mutate(diamonds, price_per_carat = price / carat)
 
 ggplot(data = ppc, mapping = aes(x = cut, y = price_per_carat)) + 
   geom_boxplot()
 
-### 3
+#### 3
 
 
 
-### 4
+#### 4
 
 ggplot(data = diamonds, mapping = aes(x = cut, y = price)) + 
   geom_lv()
 
-### 5
+#### 5
 
 ggplot(data = ppc, mapping = aes(x = cut, y = price)) + 
   geom_violin()
@@ -170,4 +170,34 @@ ggplot(data = diamonds, mapping = aes(x = cut, color = price)) + geom_histogram(
 ## 7.5.2 Two Categorical Variables
 
 ggplot(data = diamonds) + 
-  geom_count
+  geom_count(mapping =aes(x = cut, y = color))
+
+diamonds %>%
+  count(color, cut) %>%
+  ggplot(mapping = aes(x = color, y = cut)) +
+  geom_tile(mapping = aes(fill = n))
+
+### 7.5.2.1 - Exercises
+
+#### 1
+
+
+
+#### 2
+ 
+
+
+#### 3
+
+
+
+#### 4
+
+
+
+## 7.5.3 - Two Continuous Variables
+
+ggplot(data = diamonds) +
+  geom_point(mapping = aes(x = carat, y = price)) +
+  geom_smooth(mapping = aes(x = carat, y = price))
+
