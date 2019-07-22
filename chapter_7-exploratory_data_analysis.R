@@ -201,3 +201,86 @@ ggplot(data = diamonds) +
   geom_point(mapping = aes(x = carat, y = price)) +
   geom_smooth(mapping = aes(x = carat, y = price))
 
+ggplot(data = diamonds) +
+  geom_point(mapping = aes(x = carat, y = price), alpha = 1 / 100)
+
+ggplot(data = smaller) + geom_bin2d(mapping = aes(x = carat, y = price))
+
+ggplot(data = smaller) + 
+  geom_hex(mapping = aes(x = carat, y = price))
+
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) +
+  geom_boxplot(mapping = aes(group = cut_width(carat, 0.1)))
+
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) +
+  geom_boxplot(mapping = aes(group = cut_number(carat, 20)))
+
+### 7.5.3.1 - Exercises
+
+#### 1
+
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) +
+  geom_freqpoly(mapping = aes(group = cut_number(carat, 20)))
+
+ggplot(data = smaller, mapping = aes(x = carat)) +
+  geom_freqpoly(mapping = aes(group = cut_number(carat, 20)))
+
+#### 2
+
+ggplot(data = diamonds) +
+  geom_hex(mapping = aes(x = price, y = carat))
+
+#### 3
+
+
+
+#### 4
+ggplot(data = diamonds) +
+  geom_hex(mapping = aes(x = price, y = carat, fill = cut))
+
+ggplot(data = diamonds) +
+  geom_bin2d(mapping = aes(x = price, y = carat, fill = cut))
+
+ggplot(data = diamonds) +
+  geom_point(mapping = aes(x = price, y = carat, color = cut))
+
+ggplot(data = diamonds) +
+  geom_point(mapping = aes(x = price, y = carat, alpha = cut))
+
+
+#### 5
+
+
+
+## 7.6 = Patterns and Models
+
+ggplot(data = faithful) +
+  geom_point(mapping = aes(x = eruptions, y = waiting))
+
+library(modelr)
+
+mod <- lm(log(price) ~ log(carat), data = diamonds)
+
+diamonds2 <-  diamonds %>%
+  add_residuals(mod) %>%
+  mutate(resid = exp(resid))
+
+ggplot(data = diamonds2) +
+  geom_point(mapping = aes(x = carat, y = resid))
+
+ggplot(data = diamonds2) + 
+  geom_boxplot(mapping = aes(x = cut, y = resid))
+
+## 7.7 - ggplot2 calls
+
+ggplot(data = faithful, mapping = aes(x = eruptions)) +
+  geom_freqpoly(binwidth = 0.25)
+
+ggplot(faithful, aes(eruptions)) +
+  geom_freqpoly(binwidth = 0.25)
+diamonds %>%
+  count(cut, clarity) %>%
+  ggplot(aes(clarity, cut, fill = n)) + 
+  geom_tile()
+
+## 7.8 - Learning More
