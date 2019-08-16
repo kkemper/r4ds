@@ -199,7 +199,7 @@ flights %>%
   
  ## 13.5 Filtering Joins
 
-top_dest <-  flights %>%
+top_dest <- flights %>%
   count(dest, sort = TRUE) %>%
   head(10)
 top_dest
@@ -239,4 +239,83 @@ flights %>%
   arrange(desc(missing_pct))
 
 #### 2.
+
+planes_gtr_than_100 <- flights %>%
+  filter(!is.na(tailnum)) %>%
+  group_by(tailnum) %>%
+  count() %>%
+  filter(n >= 100)
+
+flights %>% semi_join(planes_gtr_than_100, by = "tailnum")
+
+#### 3.
+
+fueleconomy::vehicles %>%
+  semi_join(fueleconomy::common, by = c("make", "model"))
+
+#### 4.
+
+worst_hours <- flights %>%
+  mutate(hour = sched_dep_time %/% 100) %>%
+  group_by(origin, year, month, day, hour) %>%
+  summarize(dep_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(dep_delay)) %>%
+  slice(1:48)
+
+weather_most_delayed <- semi_join(weather, worst_hours, by = c(
+  "origin", "year", "month", "day", "hour"))
+
+select(weather_most_delayed, temp, wind_speed, precip) %>%
+  print(n = 48)
+
+ggplot(weather_most_delayed, aes(x = precip, y = wind_speed, color = temp)) + 
+  geom_point()
+
+#### 6.
+
+planes_carriers <- flights %>%
+  filter(!is.na(tailnum)) %>%
+  distinct(tailnum, carrier)
+
+planes_carriers
+
+planes_carriers %>%
+  count(tailnum) %>%
+  filter(n>1) %>%
+  nrow()
+
+carrier_transfer_tbl <- planes_carriers %>%
+  group_by(tailnum) %>%
+  filter(n() >1) %>%
+  left_join(airlines, by = "carrier") %>%
+  arrange(tailnum, carrier)
+
+## 13.6 - Join Problems
+
+airports %>%
+  count(alt, lon) %>%
+  filter(n > 1)
+
+## 13.7 - Set Operations
+
+df1 <- tribble(
+  ~x, ~y,
+  1, 1,
+  2, 1
+)
+
+df2 <-  tribble(
+  ~x, ~y,
+  1, 1, 
+  1, 2
+)
+
+intersect(df1, df2)
+
+union(df1, df2)
+
+setdiff(df1, df2)
+
+setdiff(df2, df1)
 
