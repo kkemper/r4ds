@@ -140,3 +140,45 @@ levels(gss_cat$rincome)
 levels(gss_cat$partyid)
 levels(gss_cat$relig)
 levels(gss_cat$denom)
+
+## 15.5 Modifying Factor Levels
+
+gss_cat %>% count(partyid)
+gss_cat %>%
+  mutate(partyid = fct_recode(partyid,
+                              "Republican, strong" = "Strong republican",
+                              "Republican, weak" = "Not str republican",
+                              "Independent, near rep" = "Ind,near rep",
+                              "Independent, near dem" = "Ind,near dem",
+                              "Democrat, weak" = "Not str democrat",
+                              "Democrat, strong" = "Strong democrat")) %>%
+  count(partyid)
+
+gss_cat %>%
+  mutate(partyid = fct_collapse(partyid,
+                                other = c("No answer", "Don't know", "Other party"),
+                                rep = c("Strong republican", "Not str republican"),
+                                ind = c("Ind,near rep", "Ind,near dem", "Independent"),
+                                dem = c("Not str democrat", "Strong democrat")
+  )) %>%
+  count(partyid)
+
+gss_cat %>%
+  mutate(relig = fct_lump(relig)) %>%
+  count(relig)
+
+gss_cat %>%
+  mutate(relig = fct_lump(relig, n = 10)) %>%
+  count(relig, sort = TRUE) %>%
+  print(n = Inf)
+
+### 15.5.1 - Exercises
+
+#### 1.
+
+simple_parties <- gss_cat %>%
+  mutate(partyid = fct_collapse(partyid,
+                                other = c("No answer", "Don't know", "Other party"),
+                                rep = c("Strong republican", "Not str republican"),
+                                ind = c("Ind,near rep", "Ind,near dem", "Independent"),
+                                dem = c("Not str democrat", "Strong democrat")))
