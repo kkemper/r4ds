@@ -70,3 +70,15 @@ skewness <- function(x, na.rm = T){
 skewness(c(1,2, 5, 100))
 
 #### 5.
+
+both_na <- function(x, y) {
+  sum(is.na(x) & is.na(y))
+}
+
+both_na(
+  c(NA, NA, 1, 2),
+  c(NA, 1, NA, 2)
+)
+
+
+
