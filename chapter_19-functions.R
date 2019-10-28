@@ -1,3 +1,4 @@
+library(tidyverse)
 # Chapter 19 - Functions
 
 ### 19.2.1 - Exercises
@@ -75,10 +76,26 @@ both_na <- function(x, y) {
   sum(is.na(x) & is.na(y))
 }
 
+ 
 both_na(
   c(NA, NA, 1, 2),
   c(NA, 1, NA, 2)
 )
 
+show_missings <- function(df) {
+  n <- sum(is.na(df))
+  cat("Missing values: ", n, "\n", sep = "")
+  
+  invisible(df)
+}
 
+show_missings(mtcars)
 
+x <- show_missings(mtcars)
+class(x)
+dim(x)
+
+mtcars %>%
+  show_missings() %>%
+  mutate(mpg = ifelse(mpg < 20, NA, mpg)) %>%
+  show_missings()
