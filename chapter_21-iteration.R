@@ -383,3 +383,65 @@ x %>% map_dbl(2)
 
 ### 21.5.2
 
+x1 <- list(
+  c(0.27, 0.37, 0.57, 0.91, 0.20),
+  c(0.90, 0.94, 0.66, 0.63, 0.06),
+  c(0.21, 0.18, 0.69, 0.38, 0.77)
+)
+x2 <- list(
+  c(0.50, 0.72, 0.99, 0.38, 0.78),
+  c(0.93, 0.21, 0.65, 0.13, 0.27),
+  c(0.39, 0.01, 0.38, 0.87, 0.34)
+)
+
+threshold <- function(x, cutoff = 0.8) x[x > cutoff]
+x1 %>% sapply(threshold) %>% str()
+x2 %>% sapply(threshold) %>% str()
+
+### 21.5.3 - Exercises
+
+#### 1.1
+
+map_dbl(mtcars, mean)
+
+#### 1.2
+
+map_chr(nycflights13::flights, typeof)
+
+#### 1.3
+
+length(unique(iris$Species))
+map_int(iris, function(x) length(unique(x)))
+map_int(iris, ~length(unique(.)))
+
+#### 1.4
+
+map(c(-10, 0, 10, 100), ~ rnorm(n = 10, mean = .))
+
+#### 2.
+
+is.factor(diamonds$color)
+
+map_lgl(diamonds, is.factor)
+
+#### 3.
+
+map(1:5, runif)
+map(c(TRUE, FALSE, TRUE), ~ !.)
+map(c("Hello", "World"), str_to_upper)
+map(1:5, ~ rnorm(.))
+map(c(-0.5, 0, 1), ~ rnorm(1, mean = .))
+
+#### 4.
+
+map(-2:2, rnorm, n = 5)
+
+map_dbl(-2:2, rnorm, n  = 5)
+
+flatten_dbl(map(-2:2, rnorm, n = 5))
+
+#### 5.
+
+x <- split(mtcars, mtcars$cyl)
+map(x, function(df) lm(mpg ~ wt, data = df))
+map(x, ~ lm(mpg ~ wt, data = .))
