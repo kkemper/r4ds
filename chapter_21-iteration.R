@@ -175,3 +175,211 @@ for (i in seq_along(df)) {
 }
 df
 
+### 21.3.3 Unknown Output Length
+
+means <- c(0, 1, 2)
+
+output <- double()
+for (i in seq_along(means)) {
+  n <- sample(100, 1)
+  output <- c(output, rnorm(n, means[[i]]))
+}
+              
+str(output)
+
+#=========================
+
+out <- vector("list", length(means))
+for(i in  seq_along(means)) {
+  n <- sample(100, 1)
+  out[[i]] <- rnorm(n, means[[i]])
+}
+str(out)
+str(unlist(out))
+
+### 21.3.5 - Exercises
+
+#### 1.
+# files <- dir("data/", patter = "\\.csv$", full.names = TRUE)
+# files
+df_list <- vector("list", length(files))
+for(i in seq_along(files)) {
+  df_list[[i]] <- read_csv(files[[i]])
+}
+
+#### 2.1
+
+x <- c(11, 12, 13)
+print(names(x))
+for (nm in names(x)) {
+  print(nm)
+  print(x[[nm]])
+}
+length(NULL)
+
+
+
+#### 2.2
+
+x <- c(a = 11, 12, c = 13)
+names(x)
+for (nm in names(x)) {
+  print(nm)
+  print(x[[nm]])
+}
+
+x <- c(a = 11, a = 12, c = 13)
+names(x)
+for (nm in names(x)) {
+  print(nm)
+  print(x[[nm]])
+}
+
+## 21.4 - For Loops vs. Functionals
+
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+
+output <- vector("double", length(df))
+for (i in seq_along(df)) {
+  output[[i]] <- mean(df[[i]])
+}
+output
+
+#=============================================
+col_mean <- function(df) {
+  output <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[[i]] <- mean(df[[i]])
+  }
+ output 
+}
+
+col_median <- function(df) {
+  output <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[[i]] <- median(df[[i]])
+  }
+  output 
+}
+
+col_sd(df)
+col_median(df)
+col_mean(df)
+
+col_summary <- function(df, fun) {
+  out <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[i] <- fun(df[[i]])
+  }
+output
+}
+col_summary(df, mean)
+
+### 21.4.1 - Exercises
+
+#### 1.
+
+X <- matrix(rnorm(15), nrow = 5)
+X            
+
+apply(X, 1, mean)
+
+#===============================
+
+X_row_means <- vector("numeric", length = nrow(X))
+for (i in seq_len(nrow(X))) {
+  X_row_means[[i]] <- mean(X[i, ])
+}
+X_row_means
+
+#================================
+
+apply(X, 2, mean)
+
+#================================
+
+X_col_means <- vector("numeric", length = ncol(X))
+for (i in seq_len(ncol(X))) {
+  X_col_means[[i]] <- mean(X[, i])
+}
+X_col_means
+
+#### 2.
+
+col_summary2 <- function(df, fun) {
+  numeric_cols <- vector("logical", length(df))
+  for (i in seq_along(df)) {
+    numeric_cols[[i]] <- is.numeric(df[[i]])
+  }
+  idxs <- which(numeric_cols)
+  n <- sum(numeric_cols)
+  out <- vector("double", n)
+  for (i in seq_along(idxs)) {
+    out[[i]] <- fun(df[[idxs[[i]]]])
+  }
+  names(out) <- names(df[idxs])
+  out
+}
+
+df <- tibble(
+  X1 = c(1, 2, 3),
+  X2 = c("A", "B", "C"),
+  X3 = c(0, -1, 5),
+  X4 = c(TRUE, FALSE, TRUE)
+)
+
+col_summary2(df, mean)
+col_summary2(df, median)
+
+## 21.5 Map Functions
+
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+map_dbl(df, mean)
+map_dbl(df, median)
+map_dbl(df, sd)
+
+df %>% map_dbl(mean)
+df %>% map_dbl(median)
+df %>% map_dbl(sd)
+map_dbl
+
+map_dbl(df, mean, trim = 0.5)
+
+z <- list(x = 1:3, y = 4:5)
+map_int(z, length)
+
+## 21.5.1
+
+models <- mtcars %>%
+  split(.$cyl) %>%
+  map(function(df) lm(mpg ~ wt, data = df))
+models
+
+models <- mtcars %>%
+  split(.$cyl) %>%
+  map(~lm(mpg ~ wt, data = .))
+models
+
+models %>%
+  map(summary) %>%
+  map_dbl(~.$r.squared)
+
+models %>%
+  map(summary) %>%
+  map_dbl("r.squared")
+
+x <- list(list(1, 2, 3), list(4, 5, 6), list(7, 8, 9))
+x %>% map_dbl(2)
+
+### 21.5.2
+
