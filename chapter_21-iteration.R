@@ -534,3 +534,104 @@ plots <- mtcars %>%
   map(~ggplot(., aes(mpg, wt)) + geom_point())
 paths <- stringr::str_c(names(plots), ".pdf")
 pwalk(list(paths, plots), ggsave, path = tempdir())
+
+## 21.9 Other Patterns of For Loops
+
+iris %>%
+  keep(is.factor) %>%
+  str()
+
+iris %>%
+  discard(is.factor) %>%
+  str()
+
+x <- list(1:5, letters, list(10))
+x %>%
+  some(is_character)
+
+x %>%
+  every(is_vector)
+
+x <- sample(10)
+x
+x %>%
+  detect(~. > 5)
+
+x %>%
+  detect_index(~. > 5)
+
+x %>%
+  head_while(~. > 5)
+
+x %>%
+  tail_while(~. > 5)
+
+### 21.9.2 Reduce and Accumulate
+
+dfs <- list(
+  age = tibble(name = "Johmn", age = 30),
+  sex = tibble(name = c("John", "Mary"), sex = c("M", "F")),
+  trt = tibble(name = "Mary", treatment = "A")
+)
+dfs
+
+dfs %>% reduce(full_join)
+
+vs <- list(
+  c(1, 3, 5, 6, 10),
+  c(1, 2, 3, 4, 8, 10),
+  c(1, 2, 3, 4, 8, 9, 10)
+)
+
+vs %>% reduce(intersect)
+
+x <- sample(10)
+x
+
+x%>% accumulate(`+`)
+
+### 21.9.3 - Exercises
+
+#### 1.
+
+every2 <- function(.x, .p, ...) {
+  for (i in .x) {
+    if (!.p(i, ...)) {
+      return(FALSE)
+    }
+  }
+  TRUE
+}
+
+every2(1:3, function(x) {
+  x >1
+})
+
+every2(1:3, function(x) {
+  x > 0
+})
+
+#### 2.
+col_sum2 <- function(df, f, ...) {
+  map(keep(df, is.numeric), f, ...)
+}
+
+col_sum2(iris, mean)
+
+#### 3.
+col_sum3 <- function(df, f) {
+  is_num <- sapply(df, is.numeric)
+  df_num <- df[, is_num]
+  sapply(df_num, f)
+}
+
+df <- tibble(
+  x = 1:3,
+  y = 3:1,
+  z = c("a", "b", "c")
+)
+
+col_sum3(df, mean)
+col_sum3(df[1:2], mean)
+col_sum3(df[1], mean)
+col_sum3(df[0], mean)
