@@ -9,6 +9,9 @@ library(lubridate)
 ggplot(diamonds, aes(cut, price)) + geom_boxplot()
 ggplot(diamonds, aes(color, price)) + geom_boxplot()
 ggplot(diamonds, aes(clarity, price)) + geom_boxplot()
+
+### 24.2.1 - Price and Carat
+
 ggplot(diamonds, aes(carat, price)) + geom_hex(bins = 50)
 
 diamonds2 <- diamonds %>%
@@ -37,4 +40,155 @@ ggplot(diamonds2, aes(color, lresid)) + geom_boxplot()
 ggplot(diamonds2, aes(clarity, lresid)) + geom_boxplot()
 
 ### 24.2.2 - A More Complicated Model
+
+mod_diamond2 <- lm(lprice ~ lcarat + color + cut + clarity, data = diamonds2)
+grid <- diamonds2 %>%
+  data_grid(cut, .model = mod_diamond2) %>%
+  add_predictions(mod_diamond2)
+grid
+ggplot(grid, aes(cut, pred)) +
+  geom_point()
+
+diamonds2 <- diamonds2 %>%
+  add_residuals(mod_diamond2, "lresid2")
+
+ggplot(diamonds2, aes(lcarat, lresid2)) +
+  geom_hex(bins = 50)
+
+diamonds2 %>%
+  filter(abs(lresid2) > 1) %>%
+  add_predictions(mod_diamond2) %>%
+  mutate(pred = round(2 ^ pred)) %>%
+  select(price, pred, carat:table, x:z) %>%
+  arrange(price)
+
+### 24.2.3 - Exercises
+
+#### 2.
+
+mod_log <- lm(log2(price) ~ log2(carat), data = diamonds)
+mod_log
+
+tibble(carat = seq(0.25, 5, by = 0.25)) %>%
+  add_predictions(mod_log) %>%
+  ggplot(aes(x = carat, y = 2^pred)) +
+  geom_line() +
+  labs(x = "carat", y = "price")
+
+
+2^coef(mod_log)[2]
+2^(predict(mod_log, newdata = tibble(carat = 2)) - predict(mod_log, newdata = tibble(carat = 1)))
+2^(predict(mod_log, newdata = tibble(carat = 4)) - predict(mod_log, newdata = tibble(carat = 2)))
+2^(predict(mod_log, newdata = tibble(carat = 1)) - predict(mod_log, newdata = tibble(carat = 0.5)))
+
+#### 4.
+
+ggplot(diamonds2, aes(lcarat, lresid2)) +
+  geom_hex(bins = 50)
+
+lresid2_summary <- summarize(diamonds2, 
+                             rmse = sqrt(mean(lresid2^2)),
+                             mae = mean(abs(lresid2)),
+                             p025 = quantile(lresid2, 0.025),
+                             p975 = quantile(lresid2, 0.975)
+                             )
+lresid2_summary
+
+## 24.3 - What Affects the Number of Daily Flights?
+
+daily <- flights %>%
+  mutate(date = make_date(year, month, day)) %>%
+  group_by(date) %>%
+  summarize(n = n())
+daily
+ggplot(daily, aes(date, n)) +
+  geom_line()
+daily <- daily %>%
+  mutate(wday = wday(date, label = TRUE))
+ggplot(daily, aes(wday, n)) +
+  geom_boxplot()
+
+mod <- lm(n ~ wday, data = daily)
+
+grid <- daily%>%
+  data_grid(wday) %>%
+  add_predictions(mod, "n")
+ggplot(daily, aes(wday, n)) +
+  geom_boxplot() +
+  geom_point(data = grid, color = "red", size = 4)
+
+daily <- daily %>%
+  add_residuals(mod)
+daily %>%
+  ggplot(aes(date, resid)) +
+  geom_ref_line(h = 0) +
+  geom_line()
+
+ggplot(daily, aes(date, resid, color = wday)) +
+  geom_ref_line(h = 0) +
+  geom_line()
+
+daily %>%
+  filter(resid < -100)
+
+daily %>%
+  ggplot(aes(date, resid)) +
+  geom_ref_line(h = 0) +
+  geom_line(color = "grey50") +
+  geom_smooth(se = FALSE, span = 0.20)
+
+### 24.3.2 - Seasonal Saturday Effect
+
+daily %>%
+  filter(wday == "Sat") %>%
+  ggplot(aes(date, n)) +
+  geom_point() +
+  geom_line() +
+  scale_x_date(NULL, date_breaks = "1 month", date_labels = "%b")
+
+term <- function(date) {
+  cut(date,
+      breaks = ymd(20130101, 20130605, 20130825, 20140101),
+      labels = c("spring", "summer", "fall")
+      )
+}
+
+daily <- daily%>%
+  mutate(term = term(date))
+
+daily %>%
+  filter(wday == "Sat") %>%
+  ggplot(aes(date, n, color = term)) +
+  geom_point(alpha = 1/3) +
+  geom_line() +
+  scale_x_date(NULL, date_breaks = "1 month", date_labels = "%b")
+
+daily %>%
+  ggplot(aes(wday, n, color = term)) +
+  geom_boxplot()
+
+mod1 <- lm(n ~ wday, data = daily)
+mod2 <- lm(n ~ wday * term, data = daily)
+daily %>%
+  gather_residuals(without_term = mod1, with_term = mod2) %>%
+  ggplot(aes(date, resid, color = model)) +
+  geom_line(alpha = 0.75)
+
+grid <- daily %>%
+  data_grid(wday, term) %>%
+  add_predictions(mod2, "n")
+
+ggplot(daily, aes(wday, n)) +
+  geom_boxplot() +
+  geom_point(data = grid, color = "red") +
+  facet_wrap(~ term)
+
+mod3 <- MASS::rlm(n ~ wday * term, data = daily)
+daily %>%
+  add_residuals(mod3, "resid") %>%
+  ggplot(aes(date, resid)) +
+  geom_hline(yintercept = 0, size = 2, color = "white") +
+  geom_line()
+
+### 24.3.3 Computed Variables
 
