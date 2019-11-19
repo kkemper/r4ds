@@ -192,3 +192,57 @@ daily %>%
 
 ### 24.3.3 Computed Variables
 
+compute_vars <- function(data) {
+  data %>%
+    mutate(
+      term = term(date),
+      wday = wday(date, label = TRUE)
+    )
+}
+
+wday2 <- function(x) wday(x, label = TRUE)
+mod3 <- lm(n ~ wday2(date) * term(date), data = daily)
+
+### 24.3.4 - Time of Year: An Alternative Approach
+
+library(splines)
+mod <- MASS::rlm(n ~ wday * ns(date, 5), data = daily)
+
+daily %>%
+  data_grid(wday, date = seq_range(date, n = 13)) %>%
+  add_predictions(mod) %>%
+  ggplot(aes(date, pred, color = wday)) +
+  geom_line() + 
+  geom_point()
+
+### 24.3.5 - Exercises
+
+#### 2.
+
+top_n(daily, 3, resid)
+
+#### 3.
+
+daily <- daily %>%
+  mutate(
+    wday2 = 
+      case_when(
+        wday == "Sat" & term == "summer" ~"Sat-summer",
+        wday == "Sat" & term == "fall" ~ "Sat-fall",
+        wday == "Sat" & term == "spring" ~ "sat-spring",
+        TRUE ~ as.character(wday)
+      )
+  )
+
+mod3 <- lm(n ~ wday2, data = daily)
+
+daily %>%
+  gather_residuals(sat_term = mod3, all_interact = mod2) %>%
+  ggplot(aes(date, resid, color = model)) +
+  geom_line(alpha = 0.75)
+
+daily %>%
+  spread_residuals(sat_term = mod3, all_interact = mod2) %>%
+  mutate(resid_diff = sat_term - all_interact) %>%
+  ggplot(aes(date, resid_diff)) +
+  geom_line(alpha = 0.75)
