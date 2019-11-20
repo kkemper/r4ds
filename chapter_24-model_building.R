@@ -246,3 +246,158 @@ daily %>%
   mutate(resid_diff = sat_term - all_interact) %>%
   ggplot(aes(date, resid_diff)) +
   geom_line(alpha = 0.75)
+
+library(generics)
+glance(mod3) %>% select(r.squared, sigma, AIC, df)
+glance(mod2) %>% select(r.squared, sigma, AIC, df)
+
+#### 4.
+
+holidays_2013 <- 
+  tribble(
+    ~holiday, ~date,
+    "New Year's Day", 20130101,
+    "Martin Luther King, Jr. Day", 20130121,
+    "President's Day", 20130218,
+    "Memorial Day", 20130527,
+    "Independence Day", 20130704,
+    "Labor Day", 20130902,
+    "Columbus Day", 20131028,
+    "Veteran's Day", 20131111,
+    "Thanksgiving Day", 20131128,
+    "Christmas Day", 20131225
+  ) %>%
+  mutate(date = lubridate::ymd(date))
+daily <- daily %>%
+  mutate(
+    wday3 =
+      case_when(
+        date %in% (holidays_2013$date - 1L) ~ "day before holiday",
+        date %in% (holidays_2013$date + 1L) ~ "day after holiday",
+        date%in% holidays_2013$date ~ "holiday",
+        .$wday == "Sat" & .$term == "summer" ~ "Sat-summer",
+        .$wday == "Sat" & .$term == "fall" ~ "Sat-fall",
+        .$wday == "Sat" & .$term == "spring" ~ "Sat-spring",
+        TRUE ~ as.character(.$wday)
+      )
+  )
+
+mod4 <- lm(n ~ wday3, data = daily)
+
+daily %>%
+  spread_residuals(resid_sat_terms = mod3, resid_holidays = mod4) %>%
+                     mutate(resid_diff = resid_holidays - resid_sat_terms) %>%
+                     ggplot(aes(date, resid_diff)) +
+                     geom_line(alpha = 0.75)
+
+#### 5.
+
+daily <- mutate(daily, month = factor(lubridate::month(date)))
+mod6 <- lm(n ~ wday * month, data = daily)
+print(summary(mod6))
+
+#### 6.
+
+mod7 <- lm(n ~ wday + ns(date, 5), data = daily)
+mod8 <- lm(n ~ wday * ns(date, 5), data = daily)
+
+daily %>%
+  gather_residuals(mod7, mod8) %>%
+  ggplot(aes(x = date, y = resid, color = model)) +
+geom_line(alpha = 0.75)
+
+#### 7.
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = TRUE)
+  ) %>%
+  ggplot(aes(y = distance, x = wday)) +
+  geom_boxplot() +
+  labs(x = "Days of Week", y = "Average Distance")
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = TRUE)
+  ) %>%
+  ggplot(aes(y = distance, x = wday)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Days of Week", y = "Average Distance")
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = TRUE)
+  ) %>%
+  ggplot(aes(y = distance, x = wday)) +
+  stat_summary() +
+  labs(x = "Day of Week", y = "Average Distance")
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = TRUE)
+  ) %>%
+  ggplot(aes(y = distance, x = wday)) +
+  geom_violin() +
+  labs(x = "Days of Week", y = "Average Distance")
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = T)
+  ) %>%
+  filter(
+    distance < 3000,
+    hour >= 5, hour <= 21
+  ) %>%
+  ggplot(aes(x = hour, color = wday, y = ..density..)) +
+  geom_freqpoly(binwidth = 1)
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = T)
+  ) %>%
+  filter(
+    distance < 3000,
+    hour >= 5, hour <= 21
+  ) %>%
+  group_by(wday, hour) %>%
+  summarize(distance = mean(distance)) %>%
+  ggplot(aes(x = hour, color = wday, y = distance)) +
+  geom_line()
+
+flights %>%
+  mutate(
+    date = make_date(year, month, day),
+    wday = wday(date, label = T)
+  ) %>%
+  filter(
+    distance < 3000,
+    hour >= 5, hour <= 21
+  ) %>%
+  group_by(wday, hour) %>%
+  summarize(distance = sum(distance)) %>%
+  group_by(wday) %>%
+  mutate(prop_distance = distance / sum(distance)) %>%
+  ungroup() %>%
+  ggplot(aes(x = hour, color = wday, y = prop_distance)) +
+  geom_line()
+
+#### 8.
+
+monday_first <- function(x) {
+  fct_relevel(x, levels(x)[-1])
+}
+
+daily <- daily %>%
+  mutate(wday = wday(date, label = T))
+ggplot(daily, aes(monday_first(wday), n)) +
+  geom_boxplot() +
+  labs(x = "Days of Week", y = "Number of Flights")
+
+## 24.4 - Learning More About Models
+
