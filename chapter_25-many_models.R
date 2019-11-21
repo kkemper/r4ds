@@ -229,10 +229,78 @@ df
 df %>%
   mutate(smry = map2_chr(name, value, ~ stringr::str_c(.x, ": ", .y[1])))
 
+### 25.4.5 - Exercises
+
+#### 1.
+
 str_split(sentences[1:3], " ")
 str_match_all(c("abc", "aa", "aabaa", "abbbc"), "a+")
 map(1:3, runif)
 
+#### 2.
+
 range(mtcars$mpg)
 fivenum(mtcars$mpg)
 boxplot.stats(mtcars$mpg)
+
+#### 3.
+
+mtcars %>%
+  group_by(cyl) %>%
+  summarize(q = list(quantile(mpg))) %>%
+  unnest()
+
+quantile(mtcars$mpg)
+
+#### 4.
+
+mtcars %>%
+  group_by(cyl) %>%
+  summarise_each(funs(list))
+
+## 25.5 - Simplifying List-Columns
+
+### 25.5.1 List to Vector
+
+df <- tribble(
+  ~x,
+  letters[1:5],
+  1:3,
+  runif(5)
+)
+df %>% mutate(
+  type = map_chr(x, typeof),
+  length = map_int(x, length)
+)
+
+df <- tribble(
+  ~x,
+  list(a = 1, b = 2),
+  list(a = 2, c = 4)
+)
+df %>% mutate(
+  a = map_dbl(x, "a"),
+  b = map_dbl(x, "b", .null = NA_real_)
+)
+
+### 25.5.2 - Unnesting
+
+tibble(x = 1:2, y = list(1:4, 1)) %>% unnest(y)
+
+df1 <- tribble(
+  ~x, ~y, ~z,
+  1, c("a", "b"), 1:2,
+  2, "c", 3
+)
+df1
+df1 %>% unnest(y, z)
+
+df2 <- tribble(
+  ~x, ~y, ~z,
+  1, "a", 1:2,
+  2, c("b", "c"), 3
+)
+df2
+df2 %>% unnest(y, z)
+
+## 25.6 - Making Tidy Data with broom
