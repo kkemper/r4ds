@@ -1,6 +1,7 @@
 # Chapter 28 - Graphics for Communication
 
 library(tidyverse)
+library(lubridate)
 
 ## 28.2 - Label
 
@@ -182,6 +183,8 @@ ggplot(mpg, aes(displ, hwy)) +
   scale_y_continuous() +
   scale_color_discrete()
 
+### 28.4.1 Axis Ticks and Legend Keys
+
 ggplot(mpg, aes(displ, hwy)) +
   geom_point() +
   scale_y_continuous(breaks = seq(15, 40, by = 5))
@@ -199,6 +202,8 @@ presidential %>%
   geom_segment(aes(xend = end, yend = id)) +
   scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y")
 
+### 28.4.2 - Legend Layout
+
 base <- ggplot(mpg, aes(displ, hwy)) +
   geom_point(aes(color = class))
 
@@ -212,3 +217,132 @@ ggplot(mpg, aes(displ, hwy)) +
   geom_smooth(se = F) +
   theme(legend.position = "bottom") +
   guides(color = guide_legend(nrow = 1, override.aes = list(size = 4)))
+
+###28.4.3 - Replacing a Scale
+
+ggplot(diamonds, aes(carat, price)) +
+  geom_bin2d()
+
+ggplot(diamonds, aes(log10(carat), log10(price))) +
+  geom_bin2d()
+
+ggplot(diamonds, aes(carat, price)) +
+  geom_bin2d() +
+  scale_x_log10() +
+  scale_y_log10()
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv))
+
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = drv, shape = drv)) +
+  scale_color_brewer(palette = "PuBu")
+
+presidential %>%
+  mutate(id = 33 + row_number()) %>%
+  ggplot(aes(start, id, color = party)) +
+  geom_point() +
+  geom_segment(aes(xend = end, yend = id)) +
+  scale_color_manual(values = c(Republican = "red", Democratic = "blue"))
+
+df <- tibble(
+  x = rnorm(10000),
+  y = rnorm(10000)
+)
+ggplot(df, aes(x, y)) +
+  geom_hex() +
+  coord_fixed()
+
+ggplot(df, aes(x, y)) +
+  geom_hex() +
+  viridis::scale_fill_viridis() +
+  coord_fixed()
+
+### 28.4.4 - Exercises
+
+#### 1.
+
+ggplot(df, aes(x, y)) +
+  
+  geom_hex() +
+  scale_fill_gradient(low = "blue", high = "purple") +
+  coord_fixed()
+
+#### 3.
+
+fouryears <- lubridate::make_date(seq(year(min(presidential$start)),
+                                       year(max(presidential$end)),
+                                      by = 4
+                                      ), 1, 1)
+presidential %>%
+  mutate(id = 33 + row_number(),
+         name_id = fct_inorder(str_c(name, " (", id, ")"))
+         ) %>%
+  ggplot(aes(start, name_id, color = party)) +
+  geom_point() +
+  geom_segment(aes(xend = end, yend = name_id)) +
+  scale_color_manual("Party", values = c(Republican = "red", Democratic = "blue")) +
+  scale_x_date(NULL, 
+               breaks = presidential$start, date_labels = "'%y",
+               minor_breaks = fouryears
+               ) +
+    ggtitle("Terms of US Presidents",
+            subtitle = "Roosevelt (34th) to Obama (44th)"
+            ) +
+    theme(
+      panel.grid.minor = element_blank(),
+      axis.ticks.y = element_blank()
+    )
+
+#### 4.
+
+ggplot(diamonds, aes(carat, price)) +
+  geom_point(aes(color = cut), alpha = 1 / 20) +
+  theme(legend.position = "bottom") +
+  guides(color = guide_legend(nrow = 1, override.aes = list(alpha = 1)))
+
+## 28.5 - Zooming
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth() +
+  coord_cartesian(xlim = c(5, 7), ylim = c(10, 30))
+
+mpg %>%
+  filter(displ >= 5, displ <= 7, hwy <= 30) %>%
+  ggplot(aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth()
+
+suv <- mpg %>% filter(class == "suv")
+compact <- mpg %>% filter(class == "compact") 
+
+ggplot(suv, aes(displ, hwy, color = drv)) +
+  geom_point()
+
+ggplot(compact, aes(displ, hwy, color = drv)) +
+  geom_point()
+
+x_scale <- scale_x_continuous(limits = range(mpg$displ))
+y_scale <- scale_y_continuous(limits = range(mpg$hwy))
+col_scale <- scale_color_discrete(limits = unique(mpg$drv))
+
+ggplot(suv, aes(displ, hwy, color = drv)) +
+  geom_point() +
+  x_scale +
+  y_scale +
+  col_scale
+
+ggplot(compact, aes(displ, hwy, color = drv)) +
+  geom_point() +
+  x_scale +
+  y_scale +
+  col_scale
+
+## 28.6 - Themes
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = F) +
+  theme_bw()
